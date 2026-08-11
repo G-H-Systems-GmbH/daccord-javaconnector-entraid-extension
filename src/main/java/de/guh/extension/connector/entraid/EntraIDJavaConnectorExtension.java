@@ -1041,6 +1041,21 @@ public class EntraIDJavaConnectorExtension implements JavaConnectorExtension {
 					try {
 						MSGraphResponse subqueryresponse = sendRequestWithRetry(session, subqueryrequest, coRequest, thislog);
 						line = renderNodeSubqueryResponse(thislog, subqueryresponse, line, nodecollection, coResponse, coRequest, ruleEvaluableRef);
+
+						// Follow @odata.nextLink for the subquery too - otherwise
+						// any target collection larger than a single Graph page
+						// (e.g. $expand caps at ~20, plain collections default to ~100)
+						// gets silently truncated.
+						int subpage = 1;
+						while (subqueryresponse.getNexturi() != null && !subqueryresponse.getNexturi().equals("")) {
+							subpage++;
+							thislog.debug("  Executing subquery page " + subpage + "...");
+							String subnexturl = subqueryresponse.getNexturi().replace("https://graph.microsoft.com/v1.0/", "");
+							MSGraphRequest subqueryrequestnext = new MSGraphRequest(MSGraphRequest.type_GET, subnexturl);
+							subqueryresponse = sendRequestWithRetry(session, subqueryrequestnext, coRequest, thislog);
+							line = renderNodeSubqueryResponse(thislog, subqueryresponse, line, nodecollection, coResponse, coRequest, ruleEvaluableRef);
+						}
+
 						thislog.debug("  Line after subquery: " + line);
 
 					} catch (Exception e) {
@@ -1376,21 +1391,29 @@ public class EntraIDJavaConnectorExtension implements JavaConnectorExtension {
 						// Send subquery with retry
 						MSGraphResponse subqueryresponse = sendRequestWithRetry(session, subqueryrequest, coRequest, thislog);
 
-						// Process subquery response - create one line per target element (multiline!)
-						XML xmlSubqueryResponse = subqueryresponse.getDataAsXML();
-
-						// Count target elements
-						long targetElementCount = xmlSubqueryResponse.getElementStream().count();
-						thislog.debug("  Subquery returned " + targetElementCount +
-							" target elements");
-
-						// Reset stream
-						xmlSubqueryResponse = subqueryresponse.getDataAsXML();
-
-						// Create a map to hold all lines (one per target)
+						// Create a map to hold all lines (one per target), accumulated across ALL subquery pages
 						Map<String, RuleEvaluableString> hmLines = new HashMap<String, RuleEvaluableString>();
 
-						xmlSubqueryResponse.getElementStream().forEach((Element subElement) -> {
+						// Follow @odata.nextLink for the subquery too - otherwise any target
+						// collection larger than a single Graph page (e.g. $expand caps at
+						// ~20, plain collections default to ~100) gets silently truncated.
+						int subpage = 1;
+						while (true) {
+
+							// Process subquery response - create one line per target element (multiline!)
+							XML xmlSubqueryResponse = subqueryresponse.getDataAsXML();
+
+							// Count target elements
+							long targetElementCount = xmlSubqueryResponse.getElementStream().count();
+							thislog.debug("  Subquery page " + subpage +
+								" returned " +
+								targetElementCount +
+								" target elements");
+
+							// Reset stream
+							xmlSubqueryResponse = subqueryresponse.getDataAsXML();
+
+							xmlSubqueryResponse.getElementStream().forEach((Element subElement) -> {
 
 							XML xmlSubElement = new XML(subElement);
 
@@ -1445,43 +1468,54 @@ public class EntraIDJavaConnectorExtension implements JavaConnectorExtension {
 							hmLines.put(targetLineRef.get(), targetRuleEvaluable);
 						});
 
-						thislog.debug("  Created " + hmLines.size() +
-							" relation lines for this source element");
+						if (subqueryresponse.getNexturi() == null || subqueryresponse.getNexturi().equals("")) {
+							break;
+						}
 
-						// Write all lines (with rule filtering)
-						int writtenCount = 0;
-						int filteredCount = 0;
-						for (Map.Entry<String, RuleEvaluableString> entry : hmLines.entrySet()) {
-							try {
-								if (!hasRules || relationcollection.isAllowed(entry.getValue())) {
-									coResponse.writeDataLine(entry.getKey());
-									writtenCount++;
-									thislog.debug("    Line written: " + entry.getKey());
-								} else {
-									filteredCount++;
-									thislog.debug("    Line filtered by rules: " + entry.getKey());
-								}
-							} catch (IOException e) {
-								thislog.error("Error writing relation line", e);
-								e.printStackTrace();
+						subpage++;
+						thislog.debug("  Executing subquery page " + subpage + "...");
+						String subnexturl = subqueryresponse.getNexturi().replace("https://graph.microsoft.com/v1.0/", "");
+						MSGraphRequest subqueryrequestnext = new MSGraphRequest(MSGraphRequest.type_GET, subnexturl);
+						subqueryresponse = sendRequestWithRetry(session, subqueryrequestnext, coRequest, thislog);
+					}
+
+					thislog.debug("  Created " + hmLines.size() +
+						" relation lines for this source element");
+
+					// Write all lines (with rule filtering)
+					int writtenCount = 0;
+					int filteredCount = 0;
+					for (Map.Entry<String, RuleEvaluableString> entry : hmLines.entrySet()) {
+						try {
+							if (!hasRules || relationcollection.isAllowed(entry.getValue())) {
+								coResponse.writeDataLine(entry.getKey());
+								writtenCount++;
+								thislog.debug("    Line written: " + entry.getKey());
+							} else {
+								filteredCount++;
+								thislog.debug("    Line filtered by rules: " + entry.getKey());
 							}
+						} catch (IOException e) {
+							thislog.error("Error writing relation line", e);
+							e.printStackTrace();
 						}
+					}
 
-						if (hasRules) {
-							thislog.info("  Result for source " + sourceuniqueattributevalue +
-								": " +
-								writtenCount +
-								" lines written, " +
-								filteredCount +
-								" lines filtered");
-						} else {
-							thislog.info("  Result for source " + sourceuniqueattributevalue +
-								": " +
-								writtenCount +
-								" lines written");
-						}
+					if (hasRules) {
+						thislog.info("  Result for source " + sourceuniqueattributevalue +
+							": " +
+							writtenCount +
+							" lines written, " +
+							filteredCount +
+							" lines filtered");
+					} else {
+						thislog.info("  Result for source " + sourceuniqueattributevalue +
+							": " +
+							writtenCount +
+							" lines written");
+					}
 
-					} catch (Exception e) {
+				} catch (Exception e) {
 						thislog.error("Subquery failed for source " + sourceuniqueattributevalue +
 							", skipping relations: " +
 							e.getMessage());
