@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.guh.gadget</groupId>
 	<artifactId>daccord-javaconnector-entraid-extension</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.2</version>
 	<name>daccord-javaconnector-entraid-extension</name>
 	<description>This is the core library for inchorus portals</description>
 	<scm>
@@ -16,10 +16,10 @@
 		<!-- Switches -->
 		<skipTests>true</skipTests>
 		<!-- Versions -->
-		<log4j.version>2.25.3</log4j.version>
-		<gadget-core.version>3.0.6</gadget-core.version>
-		<connector-core.version>2.2.13-SNAPSHOT</connector-core.version>
-		<msgraph-plugin.version>1.0.15-SNAPSHOT</msgraph-plugin.version>
+		<log4j.version>2.26.1</log4j.version>
+		<gadget-core.version>3.0.12</gadget-core.version>
+		<connector-core.version>2.2.15</connector-core.version>
+		<msgraph-plugin.version>1.0.14</msgraph-plugin.version>
 		<!-- Plugin Versions  -->
 		<compiler-plugin.version>3.13.0</compiler-plugin.version>
 		<release-plugin.version>3.1.1</release-plugin.version>

@@ -21,13 +21,19 @@ A [daccord](https://www.daccord.de) JavaConnector Extension that reads identity 
   - Client secret
   - API permission: `User.Read.All`, `Group.Read.All` (or equivalent), granted as **application permissions**
 
+## Compatibility
+
+| Extension version | daccord version | Java |
+|-------------------|-----------------|------|
+| 1.0.x | up to 2.2.3 | 11 |
+
 ## Building
 
 ```bash
 mvn clean package -q
 ```
 
-The runnable JAR is built to `target/daccord-javaconnector-entraid-extension-1.0.0-SNAPSHOT-runnable.jar`.
+The runnable JAR is built to `target/daccord-javaconnector-entraid-extension-1.0.2-runnable.jar`.
 
 ## Configuration
 
@@ -48,7 +54,7 @@ The runnable JAR is built to `target/daccord-javaconnector-entraid-extension-1.0
 | `gp_pwparam1` | **Client secret** (encrypted by daccord) | |
 | `gp_pwparam2` | Proxy password (optional) | |
 
-See `example/gpconnect.xml` for a template.
+See `examples/gpconnect.xml` for a template.
 
 ### Node collection parameters (`gpnodecollection.xml`)
 
@@ -69,7 +75,7 @@ Used when importing **node data** (users, groups, etc.).
 
 The `$id` placeholder in the subquery path is replaced with the unique attribute value of each object.
 
-See `example/gpnodecollection.xml` (users) and `example/gpnodecollection-group.xml` (groups).
+See `examples/gpnodecollection.xml` (users) and `examples/gpnodecollection-group.xml` (groups).
 
 ### Relation collection parameters (`gprelationcollection.xml`)
 
@@ -89,16 +95,16 @@ Used when importing **relation data** (e.g., user-to-group memberships).
 
 One relation line is written per source–target pair.
 
-See `example/gprelationcollection.xml` and `example/gprelationpreview.xml`.
+See `examples/gprelationcollection.xml` and `examples/gprelationpreview.xml`.
 
 ## Running (standalone test)
 
 ```bash
 java -Dlog4j2.level=DEBUG \
-  -jar target/daccord-javaconnector-entraid-extension-1.0.0-SNAPSHOT-runnable.jar \
+  -jar target/daccord-javaconnector-entraid-extension-1.0.2-runnable.jar \
   getnodedata \
-  example/gpconnect.xml \
-  example/gpnodecollection.xml \
+  examples/gpconnect.xml \
+  examples/gpnodecollection.xml \
   /output/path
 ```
 
@@ -154,7 +160,7 @@ src/main/java/de/guh/extension/connector/entraid/
 ├── DataHelper.java                      – Utility methods
 └── Main.java                            – Standalone test runner
 
-example/
+examples/
 ├── gpconnect.xml                        – Connection parameters template
 ├── gpnodecollection.xml                 – Node collection: users
 ├── gpnodecollection-group.xml           – Node collection: groups

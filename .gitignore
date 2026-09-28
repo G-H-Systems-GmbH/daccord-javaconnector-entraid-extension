@@ -13,3 +13,6 @@ dependency-reduced-pom.xml
 # Internal notes
 notes.txt
 FR and BUGS.txt
+
+# Local dependency copies (resolved via Maven)
+lib/
