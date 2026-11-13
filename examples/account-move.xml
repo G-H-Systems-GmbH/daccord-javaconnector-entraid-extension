@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    moveAccount - Entra ID has no OUs; updates organisational fields (PATCH /users/{id}).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> moveaccount examples/gpconnect.xml examples/account-move.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+-->
+<provisioning>
+    <data>
+        <attributes>
+            <attribute name="department">
+                <value>Sales</value>
+            </attribute>
+            <attribute name="officeLocation">
+                <value>Frankfurt</value>
+            </attribute>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="accountuniqueid">YOUR_USER_OBJECT_ID</parameter>
+        <!-- Optional:
+        <parameter name="syncedaccount_policy">skipattributes</parameter>  synced (hybrid) account: skipattributes | fail | ignore
+        <parameter name="syncedaccount_cloudattributes">usageLocation,preferredLanguage</parameter>  fields still written on a synced account
+        <parameter name="syncenabled">false</parameter>  sync state as collected; only used if Graph cannot be asked
+        -->
+    </parameters>
+</provisioning>

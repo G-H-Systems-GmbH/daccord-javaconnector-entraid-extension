@@ -4,7 +4,7 @@
         <np_param1>user</np_param1> <!-- objecttype -->
         <np_param2>users</np_param2> <!-- resourcepath -->
         <np_param3>id</np_param3> <!-- uniqueattribute -->
-        <np_param4>id,userType,displayName,givenName,accountEnabled,companyName,mail,objectId,surname,userPrincipalName,onPremisesSyncEnabled,onPremisesSamAccountName,createdDateTime</np_param4> <!-- select -->
+        <np_param4>id,userType,displayName,givenName,accountEnabled,companyName,mail,surname,userPrincipalName,onPremisesSyncEnabled,onPremisesSamAccountName,createdDateTime</np_param4> <!-- select -->
         <np_param5></np_param5> <!-- filter -->
         <np_param6></np_param6> <!-- expand -->
         <np_param7>users/$id/memberOf/microsoft.graph.group</np_param7> <!-- resourcepathsubquery -->

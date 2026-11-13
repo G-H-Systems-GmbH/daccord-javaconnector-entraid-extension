@@ -1,25 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  createpermission — Weist einen Benutzer einer EntraID-Gruppe zu.
+    createPermission - adds a user to a group (POST /groups/{id}/members/$ref).
 
-  Testaufruf:
-    java -jar <jar> createpermission examples/gpconnect.xml examples/permission-create.xml
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> createpermission examples/gpconnect.xml examples/permission-create.xml
 
-  <attributes>:
-    accountuniqueid        → pp_data_accountuniqueid        → EntraID Object-ID des Benutzers
-    securityobjectuniqueid → pp_data_securityobjectuniqueid → EntraID Object-ID der Gruppe
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
 -->
 <provisioning>
-  <data>
-    <attributes>
-      <attribute name="accountuniqueid">
-        <value>REPLACE-WITH-USER-OBJECT-ID</value>
-      </attribute>
-      <attribute name="securityobjectuniqueid">
-        <value>REPLACE-WITH-GROUP-OBJECT-ID</value>
-      </attribute>
-    </attributes>
-  </data>
-  <parameters>
-  </parameters>
+    <data>
+        <attributes>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="accountuniqueid">YOUR_USER_OBJECT_ID</parameter>
+        <parameter name="securityobjectuniqueid">YOUR_GROUP_OBJECT_ID</parameter>
+    </parameters>
 </provisioning>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    renameAccount - renames a user (PATCH /users/{id}).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> renameaccount examples/gpconnect.xml examples/account-rename.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+
+    accountname sets mailNickname and userPrincipalName (accountname@domainname).
+-->
+<provisioning>
+    <data>
+        <attributes>
+            <attribute name="displayName">
+                <value>Max Mustermann-Muster</value>
+            </attribute>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="accountuniqueid">YOUR_USER_OBJECT_ID</parameter>
+        <parameter name="accountname">mmustermann-muster</parameter>
+        <!-- Optional:
+        <parameter name="domainname">yourdomain.onmicrosoft.com</parameter>  domain of the userPrincipalName, default: gp_param3
+        <parameter name="syncedaccount_policy">skipattributes</parameter>  synced (hybrid) account: skipattributes | fail | ignore
+        <parameter name="syncedaccount_cloudattributes">usageLocation,preferredLanguage</parameter>  fields still written on a synced account
+        <parameter name="syncenabled">false</parameter>  sync state as collected; only used if Graph cannot be asked
+        -->
+    </parameters>
+</provisioning>

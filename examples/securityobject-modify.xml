@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    modifySecurityObject - updates a group (PATCH /groups/{id}).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> modifysecurityobject examples/gpconnect.xml examples/securityobject-modify.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+-->
+<provisioning>
+    <data>
+        <attributes>
+            <attribute name="description">
+                <value>New description</value>
+            </attribute>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="securityobjectuniqueid">YOUR_GROUP_OBJECT_ID</parameter>
+        <!-- Optional:
+        <parameter name="securityobjectname">New name</parameter>  sets displayName
+        -->
+    </parameters>
+</provisioning>

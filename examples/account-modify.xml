@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    modifyAccount - updates a user (PATCH /users/{id}).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> modifyaccount examples/gpconnect.xml examples/account-modify.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+
+    Any attribute is a Graph user property. An attribute PASSWORD sets a new password.
+-->
+<provisioning>
+    <data>
+        <attributes>
+            <attribute name="jobTitle">
+                <value>Consultant</value>
+            </attribute>
+            <attribute name="department">
+                <value>IT</value>
+            </attribute>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="accountuniqueid">YOUR_USER_OBJECT_ID</parameter>
+        <!-- Optional:
+        <parameter name="givenname">Max</parameter>  sets givenName and rebuilds displayName
+        <parameter name="surname">Mustermann</parameter>  sets surname and rebuilds displayName
+        <parameter name="forcechangepasswordnextsignin">true</parameter>  only with attribute PASSWORD
+        <parameter name="syncedaccount_policy">skipattributes</parameter>  synced (hybrid) account: skipattributes | fail | ignore
+        <parameter name="syncedaccount_cloudattributes">usageLocation,preferredLanguage</parameter>  fields still written on a synced account
+        <parameter name="syncenabled">false</parameter>  sync state as collected; only used if Graph cannot be asked
+        -->
+    </parameters>
+</provisioning>

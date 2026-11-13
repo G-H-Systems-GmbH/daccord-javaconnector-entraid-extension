@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    customAccountCommand "graphrequest" - sends any request to Microsoft Graph, for tests and analysis only.
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> customaccountcommand examples/gpconnect.xml examples/custom-graphrequest.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+
+    Disabled unless the connection parameter gp_param11 is "true" (ERROR_GRAPHREQUEST_DISABLED):
+    it can do anything the app registration is allowed to. Works for groups as well
+    (customsecurityobjectcommand). The resource may be written with spaces, it is encoded.
+-->
+<provisioning>
+    <data>
+        <attributes>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="command">graphrequest</parameter>
+        <parameter name="httpmethod">GET</parameter>
+        <parameter name="resource">groups?$top=1&amp;$select=id,displayName,createdDateTime</parameter>
+        <!-- Optional:
+        <parameter name="body">{"department":"IT"}</parameter>  JSON body for POST and PATCH
+        -->
+    </parameters>
+</provisioning>

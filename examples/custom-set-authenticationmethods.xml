@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    customAccountCommand "set_authenticationmethods" - registers authentication methods (MFA) on a user.
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> customaccountcommand examples/gpconnect.xml examples/custom-set-authenticationmethods.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+
+    authenticationmethods: "type=value" separated by ";", type phone (or phone:office ...) or email.
+    A "phone=" without number takes the mobilePhone of the user. Not transactional: methods
+    written before a failing one stay registered.
+-->
+<provisioning>
+    <data>
+        <attributes>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="command">set_authenticationmethods</parameter>
+        <parameter name="accountuniqueid">YOUR_USER_OBJECT_ID</parameter>
+        <parameter name="authenticationmethods">phone=+49 170 1234567;email=max.mustermann@example.com</parameter>
+        <!-- Optional:
+        <parameter name="authenticationmethod_allowedphonetypes">mobile</parameter>  phone types that may be registered
+        -->
+    </parameters>
+</provisioning>

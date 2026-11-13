@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    deletePermission - removes a user from a group (DELETE /groups/{id}/members/{id}/$ref).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> deletepermission examples/gpconnect.xml examples/permission-delete.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+-->
+<provisioning>
+    <data>
+        <attributes>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="accountuniqueid">YOUR_USER_OBJECT_ID</parameter>
+        <parameter name="securityobjectuniqueid">YOUR_GROUP_OBJECT_ID</parameter>
+    </parameters>
+</provisioning>

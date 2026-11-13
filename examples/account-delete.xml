@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    deleteAccount - deletes a user (DELETE /users/{id}).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> deleteaccount examples/gpconnect.xml examples/account-delete.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+-->
+<provisioning>
+    <data>
+        <attributes>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="accountuniqueid">YOUR_USER_OBJECT_ID</parameter>
+    </parameters>
+</provisioning>

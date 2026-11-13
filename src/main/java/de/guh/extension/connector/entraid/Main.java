@@ -2,10 +2,13 @@ package de.guh.extension.connector.entraid;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.guh.connector.core.Connector;
 import de.guh.connector.core.ConnectorRequest;
 import de.guh.connector.core.ConnectorResponse;
 import de.guh.connector.core.NodeCollection;
@@ -16,7 +19,21 @@ import de.guh.plugin.xml.XML;
 
 public class Main {
 
+	/**
+	 * Hash the *pwparam* values of the parameter files are decrypted with. Pass the decryptionhash of
+	 * a daccord system with -Ddecryptionhash=... to use values encrypted by that system; without it the
+	 * test hash of the examples applies.
+	 */
+	private static final String DECRYPTIONHASH = System.getProperty("decryptionhash", "inchorus2012!");
+
 	protected static final Logger logger = LogManager.getRootLogger();
+
+	/** Matches the content of any element whose name contains "pwparam". */
+	private static final Pattern PATTERN_PWPARAM = Pattern.compile("(<([^<>/\\s]*pwparam[^<>\\s]*)[^<>]*>)([^<]*)(</\\2>)");
+
+	/** Matches the value of any provisioning attribute whose name contains "password". */
+	private static final Pattern PATTERN_PASSWORD_ATTRIBUTE = Pattern
+		.compile("(<attribute\\s+name=\"[^\"]*(?i:password)[^\"]*\"\\s*>\\s*<value>)([^<]*)(</value>)");
 
 	public static void main(String[] args) {
 
@@ -51,7 +68,7 @@ public class Main {
 		HashMap<String, String> Config = new HashMap<String, String>();
 
 		XML xmlGParamter = new XML("temp").fromFile(new File(generalparameterfile));
-		System.out.println(xmlGParamter.toFormatedString());
+		System.out.println(maskSecrets(xmlGParamter.toFormatedString()));
 
 		Config.put("gp_param1", xmlGParamter.getValue("gp_param1"));
 		Config.put("gp_param2", xmlGParamter.getValue("gp_param2"));
@@ -63,6 +80,7 @@ public class Main {
 		Config.put("gp_param8", xmlGParamter.getValue("gp_param8"));
 		Config.put("gp_param9", xmlGParamter.getValue("gp_param9"));
 		Config.put("gp_param10", xmlGParamter.getValue("gp_param10"));
+		Config.put("gp_param11", xmlGParamter.getValue("gp_param11"));
 
 		Config.put("gp_pwparam1", xmlGParamter.getValue("gp_pwparam1"));
 		Config.put("gp_pwparam2", xmlGParamter.getValue("gp_pwparam2"));
@@ -171,11 +189,66 @@ public class Main {
 	/**
 	 * Provides access to the ConnectionManager for extensions.
 	 * Extensions can use this to get pooled connections.
-	 * 
+	 *
 	 * @return the ConnectionManager instance
 	 */
 	public static ConnectionManager getConnectionManager() {
 		return ConnectionManager.getInstance();
+	}
+
+	/**
+	 * Shortens the content of all *pwparam* elements and of all provisioning attributes whose name
+	 * contains "password" to their first three characters, so that secrets and passwords never appear
+	 * in full in the log.
+	 */
+	private static String maskSecrets(String xml) {
+
+		if (xml == null)
+			return null;
+
+		String masked = shorten(xml, PATTERN_PWPARAM, 3, 4);
+		return shorten(masked, PATTERN_PASSWORD_ATTRIBUTE, 2, 3);
+	}
+
+	/**
+	 * Replaces the value captured by {@code valuegroup} with its first three characters, keeping the
+	 * surrounding markup (group 1 and {@code tailgroup}) intact.
+	 */
+	private static String shorten(String text, Pattern pattern, int valuegroup, int tailgroup) {
+
+		Matcher matcher = pattern.matcher(text);
+		StringBuffer masked = new StringBuffer();
+
+		while (matcher.find()) {
+			String value = matcher.group(valuegroup);
+			String shortened = value.length() > 3 ? value.substring(0, 3) + "..." : value;
+			matcher.appendReplacement(masked, Matcher.quoteReplacement(matcher.group(1) + shortened + matcher.group(tailgroup)));
+		}
+		matcher.appendTail(masked);
+
+		return masked.toString();
+	}
+
+	/**
+	 * Returns a copy of the parameters with all *pwparam* values decrypted. The values are run through
+	 * the core's parameter parser as type="password", the same way the JavaConnector does inside
+	 * daccord. A copy is returned because the provisioning path still needs the encrypted config.
+	 */
+	private static HashMap<String, String> decryptSecrets(HashMap<String, String> config) {
+
+		XML xmlParameters = new XML("parameters");
+		config.forEach((key, value) -> {
+			if (value != null) {
+				XML param = new XML("parameter");
+				param.appendAttribute("name", key);
+				if (key.contains("pwparam"))
+					param.appendAttribute("type", "password");
+				param.setText(value);
+				xmlParameters.appendXML(param);
+			}
+		});
+
+		return Connector.getParameterHashMap(logger, xmlParameters, "//parameters/parameter", DECRYPTIONHASH);
 	}
 
 	// ========================================
@@ -194,12 +267,12 @@ public class Main {
 		try {
 			// Build ConnectorRequest with dummy values for connection test
 			String uniqueid = "1";
-			String decryptionhash = "inchorus2012!";
+			String decryptionhash = DECRYPTIONHASH;
 			String nodename = "CONNECT";
 			String callbackurl = "";
 
 			ConnectorRequest coRequest = new ConnectorRequest(uniqueid, decryptionhash, nodename, callbackurl);
-			coRequest.setParameters(config);
+			coRequest.setParameters(decryptSecrets(config));
 
 			ConnectorResponse coResponse = new ConnectorResponse("", coRequest);
 
@@ -241,14 +314,14 @@ public class Main {
 		logger.info("Output path: " + outputpath);
 
 		String uniqueid = "1";
-		String decryptionhash = "inchorus2012!";
+		String decryptionhash = DECRYPTIONHASH;
 		String nodename = "NODE";
 		String callbackurl = "";
 
 		XML xmlConfig = new XML("temp").fromFile(new File(collectionconfigfile));
 		XML xmlParameter = xmlConfig.findChildNode("np_params");
 		logger.info("Node parameters:");
-		logger.info(xmlParameter.toFormatedString());
+		logger.info(maskSecrets(xmlParameter.toFormatedString()));
 
 		config.put("np_param1", xmlParameter.getValue("np_param1"));
 		config.put("np_param2", xmlParameter.getValue("np_param2"));
@@ -301,7 +374,7 @@ public class Main {
 
 		try {
 			ConnectorRequest coRequest = new ConnectorRequest(uniqueid, decryptionhash, nodename, callbackurl);
-			coRequest.setParameters(config);
+			coRequest.setParameters(decryptSecrets(config));
 
 			ConnectorResponse coResponse = new ConnectorResponse(outputpath, coRequest);
 			coResponse.openDatafile();
@@ -338,7 +411,7 @@ public class Main {
 		logger.info("Output path: " + outputpath);
 
 		String uniqueid = "1";
-		String decryptionhash = "inchorus2012!";
+		String decryptionhash = DECRYPTIONHASH;
 		String relationname = "RELATION";
 		String nodename = "NODE";
 		String callbackurl = "";
@@ -346,7 +419,7 @@ public class Main {
 		XML xmlConfig = new XML("temp").fromFile(new File(collectionconfigfile));
 		XML xmlParameter = xmlConfig.findChildNode("rp_params");
 		logger.info("Relation parameters:");
-		logger.info(xmlParameter.toFormatedString());
+		logger.info(maskSecrets(xmlParameter.toFormatedString()));
 
 		config.put("rp_param1", xmlParameter.getValue("rp_param1"));
 		config.put("rp_param2", xmlParameter.getValue("rp_param2"));
@@ -400,7 +473,7 @@ public class Main {
 
 		try {
 			ConnectorRequest coRequest = new ConnectorRequest(uniqueid, decryptionhash, nodename, callbackurl);
-			coRequest.setParameters(config);
+			coRequest.setParameters(decryptSecrets(config));
 
 			ConnectorResponse coResponse = new ConnectorResponse(outputpath, coRequest);
 			coResponse.openDatafile();
@@ -433,13 +506,13 @@ public class Main {
 		logger.info("Getting node preview data from Entra ID...");
 
 		String uniqueid = "1";
-		String decryptionhash = "inchorus2012!";
+		String decryptionhash = DECRYPTIONHASH;
 		String nodename = "PREVIEW";
 		String callbackurl = "";
 
 		XML xmlParameter = new XML("temp").fromFile(new File(collectionconfigfile));
 		logger.info("Preview parameters:");
-		logger.info(xmlParameter.toFormatedString());
+		logger.info(maskSecrets(xmlParameter.toFormatedString()));
 
 		config.put("cp_param1", xmlParameter.getValue("cp_param1"));
 		config.put("cp_param2", xmlParameter.getValue("cp_param2"));
@@ -467,7 +540,7 @@ public class Main {
 
 		try {
 			ConnectorRequest coRequest = new ConnectorRequest(uniqueid, decryptionhash, nodename, callbackurl);
-			coRequest.setParameters(config);
+			coRequest.setParameters(decryptSecrets(config));
 
 			ConnectorResponse coResponse = new ConnectorResponse("", coRequest);
 
@@ -493,13 +566,13 @@ public class Main {
 		logger.info("Getting relation preview data from Entra ID...");
 
 		String uniqueid = "1";
-		String decryptionhash = "inchorus2012!";
+		String decryptionhash = DECRYPTIONHASH;
 		String nodename = "PREVIEW_RELATION";
 		String callbackurl = "";
 
 		XML xmlParameter = new XML("temp").fromFile(new File(collectionconfigfile));
 		logger.info("Relation preview parameters:");
-		logger.info(xmlParameter.toFormatedString());
+		logger.info(maskSecrets(xmlParameter.toFormatedString()));
 
 		// Load relation parameters (rp_param*)
 		config.put("cp_param1", xmlParameter.getValue("cp_param1"));
@@ -528,7 +601,7 @@ public class Main {
 
 		try {
 			ConnectorRequest coRequest = new ConnectorRequest(uniqueid, decryptionhash, nodename, callbackurl);
-			coRequest.setParameters(config);
+			coRequest.setParameters(decryptSecrets(config));
 
 			ConnectorResponse coResponse = new ConnectorResponse("", coRequest);
 
@@ -568,7 +641,7 @@ public class Main {
 			// 1. Load provisioning configuration
 			XML xmlConfig = new XML("temp").fromFile(new File(configfile));
 			logger.info("Loaded provisioning config:");
-			logger.info(xmlConfig.toFormatedString());
+			logger.info(maskSecrets(xmlConfig.toFormatedString()));
 
 			// 2. Build xmlconnectionstring
 			XML xmlConnection = new XML("parameters");
@@ -576,6 +649,9 @@ public class Main {
 				if (value != null && !value.isEmpty()) {
 					XML param = new XML("parameter");
 					param.appendAttribute("name", key);
+					// Marks the parameter as a secret so that the core's parameter logging masks it.
+					if (key.contains("pwparam"))
+						param.appendAttribute("type", "password");
 					param.setText(value);
 					xmlConnection.appendXML(param);
 				}
@@ -605,7 +681,7 @@ public class Main {
 			}
 
 			// 5. Build ConnectorRequest using ProvisioningHelper
-			String decryptionhash = "inchorus2012!";
+			String decryptionhash = DECRYPTIONHASH;
 
 			ConnectorRequest coRequest = ProvisioningHelper.buildConnectorRequest(logger, xmlconnectionstring, xmldatastring, additionalParams, decryptionhash);
 
@@ -674,13 +750,16 @@ public class Main {
 		try {
 			XML xmlConfig = new XML("temp").fromFile(new File(configfile));
 			logger.info("Loaded provisioning config:");
-			logger.info(xmlConfig.toFormatedString());
+			logger.info(maskSecrets(xmlConfig.toFormatedString()));
 
 			XML xmlConnection = new XML("parameters");
 			config.forEach((key, value) -> {
 				if (value != null && !value.isEmpty()) {
 					XML param = new XML("parameter");
 					param.appendAttribute("name", key);
+					// Marks the parameter as a secret so that the core's parameter logging masks it.
+					if (key.contains("pwparam"))
+						param.appendAttribute("type", "password");
 					param.setText(value);
 					xmlConnection.appendXML(param);
 				}
@@ -706,7 +785,7 @@ public class Main {
 				});
 			}
 
-			String decryptionhash = "inchorus2012!";
+			String decryptionhash = DECRYPTIONHASH;
 			ConnectorRequest coRequest = ProvisioningHelper.buildConnectorRequest(logger, xmlconnectionstring, xmldatastring, additionalParams, decryptionhash);
 
 			ConnectorResponse coResponse = new ConnectorResponse("", coRequest);
@@ -760,13 +839,16 @@ public class Main {
 		try {
 			XML xmlConfig = new XML("temp").fromFile(new File(configfile));
 			logger.info("Loaded provisioning config:");
-			logger.info(xmlConfig.toFormatedString());
+			logger.info(maskSecrets(xmlConfig.toFormatedString()));
 
 			XML xmlConnection = new XML("parameters");
 			config.forEach((key, value) -> {
 				if (value != null && !value.isEmpty()) {
 					XML param = new XML("parameter");
 					param.appendAttribute("name", key);
+					// Marks the parameter as a secret so that the core's parameter logging masks it.
+					if (key.contains("pwparam"))
+						param.appendAttribute("type", "password");
 					param.setText(value);
 					xmlConnection.appendXML(param);
 				}
@@ -792,7 +874,7 @@ public class Main {
 				});
 			}
 
-			String decryptionhash = "inchorus2012!";
+			String decryptionhash = DECRYPTIONHASH;
 			ConnectorRequest coRequest = ProvisioningHelper.buildConnectorRequest(logger, xmlconnectionstring, xmldatastring, additionalParams, decryptionhash);
 
 			ConnectorResponse coResponse = new ConnectorResponse("", coRequest);
@@ -865,6 +947,7 @@ public class Main {
 		System.out.println("usage: java -Dlog4j2.level=DEBUG -jar extension.jar action generalparameterfile [collectionparameterfile] [outputpath]");
 		System.out.println("-------------");
 		System.out.println("-Dlog4j2.level: For test and troubleshooting set the loglevel to DEBUG");
+		System.out.println("-Ddecryptionhash: hash the *pwparam* values are encrypted with (default: test hash inchorus2012!)");
 		System.out.println("");
 		System.out.println("=== DATA COLLECTION ACTIONS ===");
 		System.out.println("  connect                     - Test connection to Entra ID");

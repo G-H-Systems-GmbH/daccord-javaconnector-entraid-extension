@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    createSecurityObject - creates a group (POST /groups).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> createsecurityobject examples/gpconnect.xml examples/securityobject-create.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+
+    securityobjectname sets displayName. Any attribute is a Graph group property.
+-->
+<provisioning>
+    <data>
+        <attributes>
+            <attribute name="description">
+                <value>Example group</value>
+            </attribute>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="securityobjectname">Example group</parameter>
+        <!-- Optional:
+        <parameter name="mailnickname">examplegroup</parameter>  default: the name without spaces
+        <parameter name="mailenabled">false</parameter>  default of mailEnabled
+        <parameter name="securityenabled">true</parameter>  default of securityEnabled
+        -->
+    </parameters>
+</provisioning>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    reconcileAccount - reads the current state of a user (GET /users/{id}).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> reconcileaccount examples/gpconnect.xml examples/account-reconcile.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+-->
+<provisioning>
+    <data>
+        <attributes>
+        </attributes>
+    </data>
+    <parameters>
+        <parameter name="accountuniqueid">YOUR_USER_OBJECT_ID</parameter>
+        <!-- Optional:
+        <parameter name="reconcileattributes">id,userPrincipalName,displayName,accountEnabled</parameter>  $select, default: the fields the collector reads
+        -->
+    </parameters>
+</provisioning>

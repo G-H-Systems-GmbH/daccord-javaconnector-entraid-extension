@@ -9,6 +9,7 @@
 	<gp_param8></gp_param8> <!-- proxyport -->
 	<gp_param9></gp_param9> <!-- sslproxy -->
 	<gp_param10></gp_param10> <!-- proxyusername -->
-	<gp_pwparam1>YOUR_CLIENT_SECRET</gp_pwparam1> <!-- secret -->
+	<gp_param11>false</gp_param11> <!-- allowgraphrequest: "true" enables the custom command "graphrequest" (tests only) -->
+	<gp_pwparam1>YOUR_ENCRYPTED_CLIENT_SECRET</gp_pwparam1> <!-- secret, encrypted with the inchorus Security Plugin -->
 	<gp_pwparam2></gp_pwparam2> <!-- proxypassword -->
 </gp_params>

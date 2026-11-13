@@ -1,28 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    createAccount - creates a user (POST /users).
+
+    Test call:
+        java -Dlog4j2.level=DEBUG -jar <runnable-jar> createaccount examples/gpconnect.xml examples/account-create.xml
+
+    <parameters> are identifiers and steering values (pp_config_<name> in the extension),
+    <attributes> are written to Microsoft Graph as they are (pp_data_<name>).
+
+    strategy: standalone (a duplicate fails) | shared (reuses the existing user) | unique (appends a counter).
+    Derived when not given as attribute: userPrincipalName (accountname@domainname), mailNickname,
+    displayName (givenName surname), accountEnabled, passwordProfile (a password is generated
+    when the attribute PASSWORD is missing). Any further attribute is a Graph user property,
+    e.g. department, jobTitle, usageLocation; dots build nested objects (passwordProfile.password).
+-->
 <provisioning>
     <data>
         <attributes>
-            <attribute name="displayName">
-                <value>Max Mustermann</value>
-            </attribute>
-            <attribute name="mailNickname">
-                <value>mmustermann</value>
-            </attribute>
-            <attribute name="userPrincipalName">
-                <value>mmustermann@yourdomain.onmicrosoft.com</value>
-            </attribute>
             <attribute name="givenName">
                 <value>Max</value>
             </attribute>
             <attribute name="surname">
                 <value>Mustermann</value>
             </attribute>
-            <attribute name="accountEnabled">
-                <value>true</value>
+            <attribute name="userType">
+                <value>Member</value>
             </attribute>
         </attributes>
     </data>
     <parameters>
+        <parameter name="accountname">mmustermann</parameter>
         <parameter name="strategy">standalone</parameter>
+        <!-- Optional:
+        <parameter name="domainname">yourdomain.onmicrosoft.com</parameter>  domain of the userPrincipalName, default: gp_param3
+        <parameter name="upnbase">max.mustermann</parameter>  strategy "unique": base name, default: givenName.surname
+        <parameter name="upnlimit">20</parameter>  strategy "unique": attempts until ERROR_NO_FREE_USERPRINCIPALNAME
+        <parameter name="accountenabled">true</parameter>  default of accountEnabled
+        <parameter name="forcechangepasswordnextsignin">true</parameter>  default of passwordProfile.forceChangePasswordNextSignIn
+        -->
     </parameters>
 </provisioning>
